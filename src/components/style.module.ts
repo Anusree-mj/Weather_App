@@ -2,12 +2,12 @@ import styled from "styled-components";
 
 
 export const MainWrapper = styled.div`
-height:100vh;
+height: 100vh;
 background: linear-gradient(to right, #c7c7eb, #ccf2dd);
 .container {
 background-color: #ffffff7d;
 border-radius: 12px;
-padding: 1rem;
+padding: 2rem;
 position: absolute;
 top: 50%;
 left: 50%;
@@ -163,6 +163,3 @@ transform: rotate(360deg);
 }
 }
 `;
-
-
-

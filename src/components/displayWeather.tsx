@@ -1,42 +1,40 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { MainWrapper } from './style.module'
 import { AiOutlineSearch } from "react-icons/ai"
 import { WiHumidity } from "react-icons/wi"
 import { SiWindicss } from "react-icons/si"
-import { BsFillSunFill, BsCloudyFill, BsFillCloudRainFill, BsCloudFog2Fill } from "react-icons/bs"
 import { RiLoaderFill } from "react-icons/ri";
-import { TiWeatherPartlySunny } from "react-icons/ti";
-import axios from 'axios'
 import { weatherDataProps } from './type'
+import { fetchWeatherData, fetchCurrentWeather } from '../helpers/fetchCurrentWeather'
+import iconChanger from './iconChanger'
 
-
-const DisplayWeather = () => {
-    const api_key = process.env.REACT_APP_API_KEY;
-    const api_Endpoint = process.env.REACT_APP_API_ENDPOINT;
+const DisplayWeather = () => {  
 
     const [weatherData, setWeatherData] = useState<weatherDataProps | null>(null)
-
-    const fetchCurrentWeather = async (lat: number, lon: number) => {
-        const url = `${api_Endpoint}weather?lat=${lat}&lon=${lon}&appid=${api_key}&units=metric`;
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchCity, setSearchCity] = useState('');
+   
+    const handleSearch = async () => {
+        if (searchCity.trim() === "") {
+            return;
+        }
         try {
-            const response = await axios.get(url);
-            return response.data;
+            const { currentWeatherData } = await fetchWeatherData(searchCity);
+            setWeatherData(currentWeatherData);
         } catch (error) {
-            console.error('Error fetching weather data:', error);
-            throw error;
         }
     };
-
-
+   
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const { latitude, longitude } = position.coords;
-            Promise.all([fetchCurrentWeather(latitude, longitude)]).then(
-                ([currentWeather]) => {
-                    setWeatherData(currentWeather);
-                }
-            );
-        });
+        const fetchData = async () => {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                const [currentWeather] = await Promise.all([fetchCurrentWeather(latitude, longitude)]);
+                setWeatherData(currentWeather);
+                setIsLoading(true);
+            });
+        };
+        fetchData();
     }, [fetchCurrentWeather]);
 
     return (
@@ -44,20 +42,22 @@ const DisplayWeather = () => {
             <div className="container">
 
                 <div className="searchArea">
-                    <input type="text" placeholder='Enter a city' />
+                    <input type="text" placeholder='Enter a city'
+                        onChange={(e) => setSearchCity(e.target.value)}
+                        value={searchCity} />
                     <div className="searchCircle">
-                        <AiOutlineSearch className='searchIcon' />
+                        <AiOutlineSearch className='searchIcon' onClick={handleSearch} />
                     </div>
                 </div>
-                {weatherData && (
+                {weatherData && isLoading ? (
                     <>
                         <div className="weatherArea">
                             <h1>{weatherData.name}</h1>
                             <span>{weatherData.sys.country}</span>
                             <div className="icon">
-                                icon
+                                {iconChanger(weatherData.weather[0].main)}
                             </div>
-                            <h1>{weatherData.main.temp}c</h1>
+                            <h1>{weatherData.main.temp}&deg;C</h1>
                             <h2>{weatherData.weather[0].main}</h2>
                         </div>
 
@@ -79,9 +79,14 @@ const DisplayWeather = () => {
                             </div>
                         </div>
                     </>
-                )}
+                ) : (
+                    <div className="loading">
+                        <RiLoaderFill className='loadingIcon' />
+                        <p>Loading</p>
+                    </div>
 
-
+                )
+                }
             </div>
         </MainWrapper>
     )
