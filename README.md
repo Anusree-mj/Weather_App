@@ -14,8 +14,7 @@ This project is a simple weather application that provides weather information f
 - Geolocation API (for getting user's current location)
 - Styled Components (for styling)
 
-## Screenshots
+## UI Demo
 ![Screenshot 1](/public/images/ui.png)
-Weather App UI
 
 ---
